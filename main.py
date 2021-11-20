@@ -379,6 +379,8 @@ def exec_waypoint_nav_demo(arg):
 		#############################################
 		# Store pose history starting from the start position
 		process_time = datetime.now() - dt0
+		start_time = datetime.now() - dt0
+		bboxes_old = {}
 		measurement_data = lib_lidar.get_bboxes(world, vehicle_lidar, bboxes_old, process_time)
 		print('measurement_data ', measurement_data)
 		print('integrasi berhasil: data persepsi diterima')
@@ -399,6 +401,8 @@ def exec_waypoint_nav_demo(arg):
 		for frame in range(TOTAL_EPISODE_FRAMES):
 			# Gather current data from the CARLA server
 			process_time = datetime.now() - dt0
+			# Get timestamp in seconds
+			timestamp = (datetime.now() - start_time).total_seconds()
 			measurement_data = lib_lidar.get_bboxes(world, vehicle_lidar, bboxes_old, process_time)
 
 			# Update pose, timestamp
@@ -504,7 +508,7 @@ def exec_waypoint_nav_demo(arg):
 				time.sleep(0.005)
 
 				world.tick()
-				bboxes_old = {}
+				#bboxes_old = {}
 				
 
 
