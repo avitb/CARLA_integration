@@ -185,7 +185,7 @@ def get_bounding_boxes(vehicle, vehicle_lidar):
     rotate_180_z = np.array([[-1,0,0],[0,-1,0],[0,0,1]])
     reflect_to_xy = np.array([[0,1,0],[1,0,0],[0,0,1]])
     corner_box_new = (np.dot(reflect_to_y, corner_box)).transpose()
-    if((corner_box_new[0][0]+corner_box_new[7][0])/2 >= 0.0):
+    if((corner_box_new[0][0]+corner_box_new[7][0])/2 <= 0.0):
         isFront = True
     else:
         isFront = False
@@ -279,7 +279,7 @@ def get_bboxes(world, vehicle_lidar, bboxes_old, process_time):
                 bbox_old = {'cx':0.0, 'cy':0.0, 'cz':0.0}
 
             bbox = get_bbox_json(vehicle, vehicle_lidar, bbox_old, process_time)
-            if(bbox[0] >= 0.0): #only return bbox in front of ego vehicle
+            if((bbox[0] <= 0.0)and(bbox[0] != 0)and(bbox[1] != 0)and(bbox[2] != 0)): #only return bbox in front of ego vehicle
                 bboxes[i] = {}
                 bboxes[i]['cx'] = bbox[0]
                 bboxes[i]['cy'] = bbox[1]
@@ -310,7 +310,10 @@ def detect_loop(world, frame, lidar, vehicle_lidar, vis, dt0):
         distance = dist(vehicle, vehicle_lidar)
         if (distance < 60):
             bounding_boxes = get_bounding_boxes(vehicle, vehicle_lidar)['corner_box']
-            if(get_bounding_boxes(vehicle, vehicle_lidar)['isFront']): #only return bbox in front of ego vehicle
+            posx = (bounding_boxes[0][0]+bounding_boxes[7][0])/2
+            posy = (bounding_boxes[0][1]+bounding_boxes[1][1])/2
+            posz = (bounding_boxes[0][2]+bounding_boxes[7][2])/2
+            if((get_bounding_boxes(vehicle, vehicle_lidar)['isFront'])and(posx!=0)and(posy!=0)and(posz!=0)): #only return bbox in front of ego vehicle
                 line_set = draw_bounding_boxes(bounding_boxes)
                 #print("\n", get_bbox_json(vehicle, vehicle_lidar))
                 #line_list.append(line_set)
