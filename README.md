@@ -9,5 +9,5 @@
     * v2 : returns bboxes of all detected vehicles and motorcycles IN FRONT of EV
 5. Video demo:
 
-![DEMO]https://user-images.githubusercontent.com/49227721/142869941-24f73605-4a41-47c8-8f61-a02a3008f253.mp4
+<video src='https://user-images.githubusercontent.com/49227721/142869941-24f73605-4a41-47c8-8f61-a02a3008f253.mp4' width=180/>
 
