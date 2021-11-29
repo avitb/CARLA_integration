@@ -50,6 +50,17 @@ LABEL_COLORS = np.array([
     (145, 170, 100), # Terrain
 ]) / 255.0 # normalize each channel [0-1] since is what Open3D uses
 
+class struct_bbox:
+    cx		: float
+    cy		: float
+    cz		: float
+    dist	: float
+    l		: float
+    w		: float
+    h		: float
+    orient	: float
+    speed	: float
+
 def lidar_callback(point_cloud, point_list):
     """Prepares a point cloud with intensity
     colors ready to be consumed by Open3D"""
@@ -248,48 +259,62 @@ def get_bbox_json(vehicle, vehicle_lidar, bbox_old, process_time):
     reflect_to_x = np.array([[1,0,0],[0,-1,0],[0,0,1]])
     reflect_to_y = np.array([[-1,0,0],[0,1,0],[0,0,1]])
     translation_ref = np.dot(reflect_to_y, translation[:3])
-    cx = translation_ref[0]
-    cy = translation_ref[1]
-    cz = translation_ref[2]
-    dist = math.sqrt(cx**2 + cy**2 + cz**2)
-    l = extent.x*2
-    w = extent.y*2
-    h = extent.z*2
-    orient = rotation
+    bbox_param = struct_bbox()
+    bbox_param.cx 		= translation_ref[0]
+    bbox_param.cy 		= translation_ref[1]
+    bbox_param.cz 		= translation_ref[2]
+    bbox_param.dist 	= math.sqrt(bbox_param.cx**2 + bbox_param.cy**2 + bbox_param.cz**2)
+    bbox_param.l 		= extent.x*2
+    bbox_param.w 		= extent.y*2
+    bbox_param.h 		= extent.z*2
+    bbox_param.orient 	= rotation
     
-    speed = math.sqrt(( cx - bbox_old['cx'])**2 + (cy - bbox_old['cy'])**2 + (cz - bbox_old['cz'])**2 )/ (process_time.total_seconds())
+    bbox_param.speed 	= math.sqrt(( bbox_param.cx - bbox_old.cx)**2 + (bbox_param.cy - bbox_old.cy)**2 + (bbox_param.cz - bbox_old.cz)**2 )/ (process_time.total_seconds())
 
-    json_string = np.array([cx,cy,cz,dist,l,w,h,orient,speed])
-    return json_string
+    #json_string = np.array([cx,cy,cz,dist,l,w,h,orient,speed])
+    #return json_string
+    return bbox_param
 	
 def get_bboxes(world, vehicle_lidar, bboxes_old, process_time):
     vehicles = world.get_actors().filter('vehicle.*')
-    bboxes = {}
+    bboxes = []
+    bbox = struct_bbox()
+    bbox_old = struct_bbox()
     i = 0
     for vehicle in vehicles:
         distance = dist(vehicle, vehicle_lidar)
         if (distance < 60):
             #print("old list length " + str(len(bboxes_old.keys())))
             if (bboxes_old):
-                if (i < len(bboxes_old.keys())):
+                if (i < len(bboxes_old)):
                     bbox_old = bboxes_old[i]
                 else:
-                    bbox_old = {'cx':0.0, 'cy':0.0, 'cz':0.0}
+                    #bbox_old = {'cx':0.0, 'cy':0.0, 'cz':0.0}
+                    bbox_old.cx = 0.0
+                    bbox_old.cy = 0.0
+                    bbox_old.cz = 0.0
+					
             else:
-                bbox_old = {'cx':0.0, 'cy':0.0, 'cz':0.0}
+                #bbox_old = {'cx':0.0, 'cy':0.0, 'cz':0.0}
+                bbox_old.cx = 0.0
+                bbox_old.cy = 0.0
+                bbox_old.cz = 0.0
 
             bbox = get_bbox_json(vehicle, vehicle_lidar, bbox_old, process_time)
-            if((bbox[0] <= 0.0)and(bbox[0] != 0)and(bbox[1] != 0)and(bbox[2] != 0)): #only return bbox in front of ego vehicle
+            if((bbox.cx <= 0.0)and(bbox.cx != 0)and(bbox.cy != 0)and(bbox.cz != 0)): #only return bbox in front of ego vehicle
+                bboxes.append(bbox)
+                """
                 bboxes[i] = {}
-                bboxes[i]['cx'] = bbox[0]
-                bboxes[i]['cy'] = bbox[1]
-                bboxes[i]['cz'] = bbox[2]
-                bboxes[i]['dist'] = bbox[3]
-                bboxes[i]['l'] = bbox[4]
-                bboxes[i]['w'] = bbox[5]
-                bboxes[i]['h'] = bbox[6]
-                bboxes[i]['orient'] = bbox[7]
-                bboxes[i]['speed'] = bbox[8]
+                bboxes[i].cx 		= bbox.cx
+                bboxes[i].cy 		= bbox.cy
+                bboxes[i].cz 		= bbox.cz
+                bboxes[i].dist 		= bbox.dist
+                bboxes[i].l 		= bbox.l
+                bboxes[i].w 		= bbox.w
+                bboxes[i].h 		= bbox.h
+                bboxes[i].orient 	= bbox.orient
+                bboxes[i].speed 	= bbox.speed
+                """
                 i = i+1
     return bboxes
 
@@ -327,6 +352,23 @@ def detect_loop(world, frame, lidar, vehicle_lidar, vis, dt0):
                 #bbox_count = bbox_count+1
 			    #"""
     #print("bbox_count " + str(bbox_count))
+	
+def print_bboxes(bboxes):
+    id = 0
+    print("\n{")
+    while (id < len(bboxes)):
+        print("'id' = " + str(id))
+        print("    {\t'cx' = " + str(bboxes[id].cx))
+        print("\t'cy' = " + str(bboxes[id].cy))
+        print("\t'cz' = " + str(bboxes[id].cz))
+        print("\t'dist' = " + str(bboxes[id].dist))
+        print("\t'l' = " + str(bboxes[id].l))
+        print("\t'w' = " + str(bboxes[id].w))
+        print("\t'h' = " + str(bboxes[id].h))
+        print("\t'orient' = " + str(bboxes[id].orient))
+        print("\t'speed' = " + str(bboxes[id].speed) + "\t}")
+        id = id+1
+    print("}")
 
 def main_code(arg): #, world, vehicle_lidar):
     """Main function of the script"""
