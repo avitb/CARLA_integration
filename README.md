@@ -27,5 +27,9 @@ while (id < len(bboxes)):
     * v3 : v2 added with new class struct_bbox
 5. Video demo:
 
-<video src='https://raw.githubusercontent.com/avitb/CARLA_integration/main/demo_lidar_v3.mp4' width=1920/>
+<video src='https://user-images.githubusercontent.com/49227721/143821128-1d61b253-a46d-43cb-b447-8137cbde6888.mp4' width=1920/>
+
+
+
+
 
