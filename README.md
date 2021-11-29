@@ -4,6 +4,7 @@
 1.  Using CARLA 0.9.11
 2.  Detects vehicle (car, truck), and motorcycle (motorcycle, bicycle)
 3.  get_bboxes returns | id | cx | cy | cz | distance | length | width | height | orientation | speed |
+
 Example of get_bboxes:
 ```python
 bboxes = lib_lidar.get_bboxes(world, vehicle_lidar, bboxes_old, process_time)
@@ -26,5 +27,5 @@ while (id < len(bboxes)):
     * v3 : v2 added with new class struct_bbox
 5. Video demo:
 
-<video src='https://raw.githubusercontent.com/avitb/CARLA_integration/main/demo_lidar_v3.mp4' width=1920/>
+<video src='https://github.com/avitb/CARLA_integration/blob/c4e3046d8c822d1e5285fe18a96b95959507979f/demo_lidar_v3.mp4' width=1920/>
 
