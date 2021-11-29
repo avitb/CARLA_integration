@@ -194,7 +194,8 @@ if __name__ == "__main__":
 				#=====================================================
 				bboxes = lib_lidar.get_bboxes(world, vehicle_lidar, bboxes_old, process_time)
 				bboxes_old = bboxes
-				print(bboxes)
+				#print(bboxes)
+				lib_lidar.print_bboxes(bboxes)
 				
 				sys.stdout.write('\r' + 'FPS: ' + str(1.0 / process_time.total_seconds()))
 				sys.stdout.flush()
