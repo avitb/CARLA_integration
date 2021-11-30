@@ -434,8 +434,8 @@ def transform_world(bboxes, vehicle_lidar):
         bbox_param.h 		= bboxes[i].h
         bbox_param.orient 	= rotation_world
         bbox_param.speed 	= math.sqrt(
-			(bboxes[i].speed * math.cos(bboxes[i].orient) - velocity_lidar.x * math.cos(np.radians(transform_lidar.rotation.yaw)))**2 
-			+ (bboxes[i].speed * math.sin(bboxes[i].orient) - velocity_lidar.y * math.sin(np.radians(transform_lidar.rotation.yaw)))**2) #math.sqrt(( bbox_param.cx - bbox_old.cx)**2 + (bbox_param.cy - bbox_old.cy)**2 + (bbox_param.cz - bbox_old.cz)**2 )/ (process_time.total_seconds())
+			(bboxes[i].speed * math.cos(bboxes[i].orient) + velocity_lidar.x * math.cos(np.radians(transform_lidar.rotation.yaw)))**2 
+			+ (bboxes[i].speed * math.sin(bboxes[i].orient) + velocity_lidar.y * math.sin(np.radians(transform_lidar.rotation.yaw)))**2) #math.sqrt(( bbox_param.cx - bbox_old.cx)**2 + (bbox_param.cy - bbox_old.cy)**2 + (bbox_param.cz - bbox_old.cz)**2 )/ (process_time.total_seconds())
         bboxes_world.append(bbox_param)
         i = i+1
 
