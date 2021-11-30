@@ -11,6 +11,7 @@ from matplotlib import cm
 import open3d as o3d
 import math
 import json
+import cv2
 
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -50,6 +51,10 @@ LABEL_COLORS = np.array([
     (145, 170, 100), # Terrain
 ]) / 255.0 # normalize each channel [0-1] since is what Open3D uses
 
+IM_WIDTH = 640
+IM_HEIGHT = 480
+i_image = 0
+
 class struct_bbox:
     cx		: float
     cy		: float
@@ -60,6 +65,27 @@ class struct_bbox:
     h		: float
     orient	: float
     speed	: float
+
+#global i_image
+
+def process_img(image, i_image_fungsi):
+    i = np.array(image.raw_data)
+    #!python detect.py --weights C:/carla9.12/PythonAPI/examples/yolov5/runs/train/exp/weights/best.pt --img 640 --conf 0.25 --source image
+    i_image_fungsi = i_image_fungsi + 1
+    #string_image_save_to_disk = "G:/Akademik/Semester ekstensi/TA2021/SERVER/Integrasi Carla/NEW w kak khansa/Simulasi LIDAR/Bentuk library (CARLA)/v4 - gabung dengan kamera/save/"+str(i_image_fungsi)#"C:/carla9.12/result/"+str( i_image_fungsi )
+    i_image = i_image_fungsi
+    #image_save_to_disk = image.save_to_disk( string_image_save_to_disk )
+    # realtime detection
+    # string_detect_image = "python detect.py --weights C:/carla9.12/PythonAPI/examples/yolov5/runs/train/exp/weights/best.pt --img 640 --conf 0.25 --source " + string_image_save_to_disk
+    # time.sleep(30)
+    # os.system( string_detect_image )
+    i2 = i.reshape((IM_HEIGHT, IM_WIDTH, 4))
+    i3 = i2[:, :, :3]
+    cv2.imshow("",i3)
+    cv2.waitKey(1)
+    #time.sleep(0.01)
+    return i3/255.0 , i_image_fungsi
+
 
 def lidar_callback(point_cloud, point_list):
     """Prepares a point cloud with intensity
@@ -301,7 +327,7 @@ def get_bboxes(world, vehicle_lidar, bboxes_old, process_time):
                 bbox_old.cz = 0.0
 
             bbox = get_bbox_json(vehicle, vehicle_lidar, bbox_old, process_time)
-            if((bbox.cx <= 0.0)and(bbox.cx != 0)and(bbox.cy != 0)and(bbox.cz != 0)): #only return bbox in front of ego vehicle
+            if((bbox.cx <= 0.0)):#and(bbox.cx != 0)and(bbox.cy != 0)and(bbox.cz != 0)): #only return bbox in front of ego vehicle
                 bboxes.append(bbox)
                 """
                 bboxes[i] = {}
@@ -338,7 +364,7 @@ def detect_loop(world, frame, lidar, vehicle_lidar, vis, dt0):
             posx = (bounding_boxes[0][0]+bounding_boxes[7][0])/2
             posy = (bounding_boxes[0][1]+bounding_boxes[1][1])/2
             posz = (bounding_boxes[0][2]+bounding_boxes[7][2])/2
-            if((get_bounding_boxes(vehicle, vehicle_lidar)['isFront'])and(posx!=0)and(posy!=0)and(posz!=0)): #only return bbox in front of ego vehicle
+            if((get_bounding_boxes(vehicle, vehicle_lidar)['isFront'])):#and(posx!=0)and(posy!=0)and(posz!=0)): #only return bbox in front of ego vehicle
                 line_set = draw_bounding_boxes(bounding_boxes)
                 #print("\n", get_bbox_json(vehicle, vehicle_lidar))
                 #line_list.append(line_set)
@@ -370,6 +396,51 @@ def print_bboxes(bboxes):
         id = id+1
     print("}")
 
+def transform_world(bboxes, vehicle_lidar):
+    #extent = vehicle.bounding_box.extent
+    #transform = vehicle.get_transform()
+    transform_lidar = vehicle_lidar.get_transform()
+    angle_lidar = np.radians(transform_lidar.rotation.yaw)
+    velocity_lidar = vehicle_lidar.get_velocity()
+    bboxes_world = []
+    i = 0
+    while (i<len(bboxes)):
+        location_world = np.array([bboxes[i].cx + transform_lidar.location.x, bboxes[i].cy + transform_lidar.location.y, bboxes[i].cz + transform_lidar.location.z])
+        rotation_world = bboxes[i].orient + np.radians(transform_lidar.rotation.yaw)
+        dist = math.sqrt(location_world[0]**2 + location_world[1]**2)
+        if dist>=0:
+            world_frame = np.array([-transform_lidar.location.x,-transform_lidar.location.y,-transform_lidar.location.z])
+            trans_rot = np.zeros((4, 4))
+            trans_rot[0,:] = np.array([math.cos(-angle_lidar), math.sin(-angle_lidar), 0.0, np.dot(-world_frame, np.array([math.cos(-angle_lidar), math.sin(-angle_lidar), 0.0]))])
+            trans_rot[1,:] = np.array([-math.sin(-angle_lidar), math.cos(-angle_lidar), 0.0, np.dot(-world_frame, np.array([-math.sin(-angle_lidar), math.cos(-angle_lidar), 0.0]))]) 
+            trans_rot[2,:] = np.array([0.0, 0.0, 1.0, np.dot(-world_frame,np.array([0.0, 0.0, 1.0]))])
+            trans_rot[3,:] = np.array([0.0,0.0,0.0,1.0])
+            translation = np.dot(trans_rot, np.array([bboxes[i].cx,bboxes[i].cy,bboxes[i].cz,1]))
+        else:
+            translation = [0,0,0]
+        """
+        Doing transformation of location
+        """
+        reflect_to_x = np.array([[1,0,0],[0,-1,0],[0,0,1]])
+        reflect_to_y = np.array([[-1,0,0],[0,1,0],[0,0,1]])
+        translation_ref = np.dot(reflect_to_y, translation[:3])
+        bbox_param = struct_bbox()
+        bbox_param.cx 		= translation_ref[0]
+        bbox_param.cy 		= translation_ref[1]
+        bbox_param.cz 		= translation_ref[2]
+        bbox_param.dist 	= bboxes[i].dist #math.sqrt(bbox_param.cx**2 + bbox_param.cy**2 + bbox_param.cz**2)
+        bbox_param.l 		= bboxes[i].l
+        bbox_param.w 		= bboxes[i].w
+        bbox_param.h 		= bboxes[i].h
+        bbox_param.orient 	= rotation_world
+        bbox_param.speed 	= math.sqrt(
+			(bboxes[i].speed * math.cos(bboxes[i].orient) - velocity_lidar.x * math.cos(np.radians(transform_lidar.rotation.yaw)))**2 
+			+ (bboxes[i].speed * math.sin(bboxes[i].orient) - velocity_lidar.y * math.sin(np.radians(transform_lidar.rotation.yaw)))**2) #math.sqrt(( bbox_param.cx - bbox_old.cx)**2 + (bbox_param.cy - bbox_old.cy)**2 + (bbox_param.cz - bbox_old.cz)**2 )/ (process_time.total_seconds())
+        bboxes_world.append(bbox_param)
+        i = i+1
+
+    return bboxes_world
+	
 def main_code(arg): #, world, vehicle_lidar):
     """Main function of the script"""
     #"""
