@@ -49,7 +49,7 @@ while (id < len(bboxes)):
   * White jittering in camera window
   * World origin frame has incorrect speed parameter value
   * Pop/push algorithm change arbitrarily from FIFO to LIFO
-7. Video demo:
+7. Video demo (print World-origin frame bboxes):
 
 <video src='https://user-images.githubusercontent.com/49227721/143976548-89aa0aab-63f9-47a7-a8e3-311a1052ca13.mp4' width=1920/>
 
