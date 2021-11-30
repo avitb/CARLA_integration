@@ -327,7 +327,7 @@ def get_bboxes(world, vehicle_lidar, bboxes_old, process_time):
                 bbox_old.cz = 0.0
 
             bbox = get_bbox_json(vehicle, vehicle_lidar, bbox_old, process_time)
-            if((bbox.cx <= 0.0)):#and(bbox.cx != 0)and(bbox.cy != 0)and(bbox.cz != 0)): #only return bbox in front of ego vehicle
+            if((bbox.cx <= 0.0)):#and(bbox.cx != 0)and(bbox.cy != 0)and(bbox.cz != 0)): #only return bbox in front of ego vehicle and ev itself
                 bboxes.append(bbox)
                 """
                 bboxes[i] = {}
@@ -364,7 +364,7 @@ def detect_loop(world, frame, lidar, vehicle_lidar, vis, dt0):
             posx = (bounding_boxes[0][0]+bounding_boxes[7][0])/2
             posy = (bounding_boxes[0][1]+bounding_boxes[1][1])/2
             posz = (bounding_boxes[0][2]+bounding_boxes[7][2])/2
-            if((get_bounding_boxes(vehicle, vehicle_lidar)['isFront'])):#and(posx!=0)and(posy!=0)and(posz!=0)): #only return bbox in front of ego vehicle
+            if((get_bounding_boxes(vehicle, vehicle_lidar)['isFront'])):#and(posx!=0)and(posy!=0)and(posz!=0)): #only return bbox in front of ego vehicle and ev itself
                 line_set = draw_bounding_boxes(bounding_boxes)
                 #print("\n", get_bbox_json(vehicle, vehicle_lidar))
                 #line_list.append(line_set)
