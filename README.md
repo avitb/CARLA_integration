@@ -51,13 +51,42 @@ while (id < len(bboxes)):
   * Pop/push algorithm change arbitrarily from FIFO to LIFO
 7. Video demo (print World-origin frame bboxes):
 
-<video src='https://user-images.githubusercontent.com/49227721/143976548-89aa0aab-63f9-47a7-a8e3-311a1052ca13.mp4' width=1920/>
+Demo<video src='https://user-images.githubusercontent.com/49227721/143976548-89aa0aab-63f9-47a7-a8e3-311a1052ca13.mp4' width=1920/>
+
+demo can be replicated by excecuting main_lidar_test.py
 
 
+## Camera library (lib_lidar.py):
+Object detection with bounding box application with yoloV3. Reference: https://github.com/umtclskn/Carla_Simulator_YOLOV3_Object_Detection
 
+YoloV3 Tensorflow implementation forked from: https://github.com/YunYang1994/tensorflow-yolov3
 
-
-
+### Setup
+1. From folder camera_library\, put yolov3_object_detection.py to  ..\CARLA_0.9.11\WindowsNoEditor\PythonAPI\examples\
+2. Download COCO weights from this link:
+```
+https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/yolov3_coco.tar.gz
+```
+extract this file under the below path:
+```
+..\CARLA_0.9.11\WindowsNoEditor\PythonAPI\examples\tensorflow-yolov3\checkpoint
+```
+3. Open cmd at ..\CARLA_0.9.11\WindowsNoEditor\PythonAPI\examples\tensorflow-yolov3 and run these command:
+```
+python convert_weight.py
+python freeze_graph.py
+```
+4. Open and run CarlaUE4.exe
+5. Run spawn actor python file for adding pedestrians or vehicles with:
+```
+python spawn_npc.py
+```
+6. Run object detection python file to start detecting vehicles, pedestrians or bicycles. with:
+```
+python yolov3_object_detection.py
+```
+![image](https://user-images.githubusercontent.com/49227721/144821441-302cc779-1d84-452e-b242-24e6e2aa818d.png)
+![image](https://user-images.githubusercontent.com/49227721/144821459-794be0e6-7d3a-4408-a8fc-1108a4a4788d.png)
 
 
 
