@@ -62,18 +62,24 @@ Object detection with bounding box application with yoloV3. Reference: https://g
 YoloV3 Tensorflow implementation forked from: https://github.com/YunYang1994/tensorflow-yolov3
 
 ### Setup
-1. From folder camera_library\, put yolov3_object_detection.py to  ..\CARLA_0.9.11\WindowsNoEditor\PythonAPI\examples\
+1. From folder camera_library\, put **yolov3_object_detection.py** and **tensorflow_yolov3** into  
+> ..\CARLA_0.9.11\WindowsNoEditor\PythonAPI\examples\
+
+for easier access
 2. Download COCO weights from this link:
 ```
 https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/yolov3_coco.tar.gz
 ```
 extract this file under the below path:
+
+> ..\CARLA_0.9.11\WindowsNoEditor\PythonAPI\examples\tensorflow-yolov3\checkpoint
+
+3. Open cmd at: 
+> ..\CARLA_0.9.11\WindowsNoEditor\PythonAPI\examples\tensorflow-yolov3 
+
+and run these command:
 ```
-..\CARLA_0.9.11\WindowsNoEditor\PythonAPI\examples\tensorflow-yolov3\checkpoint
-```
-3. Open cmd at ..\CARLA_0.9.11\WindowsNoEditor\PythonAPI\examples\tensorflow-yolov3 and run these command:
-```
-python convert_weight.py
+python convert_weight.py 
 python freeze_graph.py
 ```
 4. Open and run CarlaUE4.exe
