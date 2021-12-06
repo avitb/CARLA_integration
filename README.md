@@ -56,7 +56,7 @@ Demo<video src='https://user-images.githubusercontent.com/49227721/143976548-89a
 demo can be replicated by excecuting main_lidar_test.py
 
 
-## Camera library (lib_lidar.py):
+## Camera library :
 Object detection with bounding box application with yoloV3. Reference: https://github.com/umtclskn/Carla_Simulator_YOLOV3_Object_Detection
 
 YoloV3 Tensorflow implementation forked from: https://github.com/YunYang1994/tensorflow-yolov3
