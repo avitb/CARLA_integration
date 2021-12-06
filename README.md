@@ -61,6 +61,9 @@ Object detection with bounding box application with yoloV3. Reference: https://g
 
 YoloV3 Tensorflow implementation forked from: https://github.com/YunYang1994/tensorflow-yolov3
 
+Dependencies :
+* Tensorflow
+* Easydict
 ### Setup
 1. From folder camera_library\, put **yolov3_object_detection.py** and **tensorflow_yolov3** into  
 > ..\CARLA_0.9.11\WindowsNoEditor\PythonAPI\examples\
