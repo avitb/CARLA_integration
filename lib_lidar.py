@@ -55,7 +55,7 @@ IM_WIDTH = 640
 IM_HEIGHT = 480
 i_image = 0
 
-class struct_bbox:
+class struct_bbox():
     cx		: float
     cy		: float
     cz		: float
