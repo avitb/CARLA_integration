@@ -56,15 +56,16 @@ IM_HEIGHT = 480
 i_image = 0
 
 class struct_bbox():
-    cx		: float
-    cy		: float
-    cz		: float
-    dist	: float
-    l		: float
-    w		: float
-    h		: float
-    orient	: float
-    speed	: float
+    def __init__(self):
+        self.cx=0.0
+        self.cy=0.0
+        self.cz=0.0
+        self.dist=0.0
+        self.l=0.0
+        self.w=0.0
+        self.h=0.0
+        self.orient=0.0
+        self.speed=0.0
 
 #global i_image
 
