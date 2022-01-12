@@ -401,7 +401,7 @@ def transform_world(bboxes, vehicle_lidar):
     #extent = vehicle.bounding_box.extent
     #transform = vehicle.get_transform()
     transform_lidar = vehicle_lidar.get_transform()
-    angle_lidar = np.radians(transform_lidar.rotation.yaw)
+    angle_lidar = np.radians(360 - transform_lidar.rotation.yaw)
     velocity_lidar = vehicle_lidar.get_velocity()
     bboxes_world = []
     i = 0
@@ -412,11 +412,11 @@ def transform_world(bboxes, vehicle_lidar):
         if dist>=0:
             world_frame = np.array([-transform_lidar.location.x,-transform_lidar.location.y,-transform_lidar.location.z])
             trans_rot = np.zeros((4, 4))
-            trans_rot[0,:] = np.array([math.cos(-angle_lidar), math.sin(-angle_lidar), 0.0, np.dot(-world_frame, np.array([math.cos(-angle_lidar), math.sin(-angle_lidar), 0.0]))])
-            trans_rot[1,:] = np.array([-math.sin(-angle_lidar), math.cos(-angle_lidar), 0.0, np.dot(-world_frame, np.array([-math.sin(-angle_lidar), math.cos(-angle_lidar), 0.0]))]) 
+            trans_rot[0,:] = np.array([math.cos(angle_lidar), math.sin(angle_lidar), 0.0, np.dot(-world_frame, np.array([math.cos(angle_lidar), math.sin(angle_lidar), 0.0]))])
+            trans_rot[1,:] = np.array([-math.sin(angle_lidar), math.cos(angle_lidar), 0.0, np.dot(-world_frame, np.array([-math.sin(angle_lidar), math.cos(angle_lidar), 0.0]))]) 
             trans_rot[2,:] = np.array([0.0, 0.0, 1.0, np.dot(-world_frame,np.array([0.0, 0.0, 1.0]))])
             trans_rot[3,:] = np.array([0.0,0.0,0.0,1.0])
-            translation = np.dot(trans_rot, np.array([bboxes[i].cx,bboxes[i].cy,bboxes[i].cz,1]))
+            translation = np.dot(trans_rot, np.array([bboxes[i].cx,bboxes[i].cy,bboxes[i].cz,1.0]))
         else:
             translation = [0,0,0]
         """
@@ -424,7 +424,9 @@ def transform_world(bboxes, vehicle_lidar):
         """
         reflect_to_x = np.array([[1,0,0],[0,-1,0],[0,0,1]])
         reflect_to_y = np.array([[-1,0,0],[0,1,0],[0,0,1]])
-        translation_ref = np.dot(reflect_to_y, translation[:3])
+        identity = np.array([[1,0,0],[0,1,0],[0,0,1]])
+        adapt = np.array([[0,1,0],[1,0,0],[0,0,-1]])
+        translation_ref = np.dot(adapt, translation[:3])
         bbox_param = struct_bbox()
         bbox_param.cx 		= translation_ref[0]
         bbox_param.cy 		= translation_ref[1]
