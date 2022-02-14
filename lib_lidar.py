@@ -397,18 +397,33 @@ def print_bboxes(bboxes):
         id = id+1
     print("}")
 
+def truncate(number, decimals=0):
+    """
+    Returns a value truncated to a specific number of decimal places.
+    """
+    if not isinstance(decimals, int):
+        raise TypeError("decimal places must be an integer.")
+    elif decimals < 0:
+        raise ValueError("decimal places has to be 0 or more.")
+    elif decimals == 0:
+        return math.trunc(number)
+
+    factor = 10.0 ** decimals
+    return math.trunc(number * factor) / factor
+	
 def transform_world(bboxes, vehicle_lidar):
     #extent = vehicle.bounding_box.extent
     #transform = vehicle.get_transform()
     transform_lidar = vehicle_lidar.get_transform()
-    angle_lidar = np.radians(360 - transform_lidar.rotation.yaw)
+    angle_lidar = np.radians(360)-np.radians(transform_lidar.rotation.yaw)
     velocity_lidar = vehicle_lidar.get_velocity()
     bboxes_world = []
     i = 0
     while (i<len(bboxes)):
-        location_world = np.array([bboxes[i].cx + transform_lidar.location.x, bboxes[i].cy + transform_lidar.location.y, bboxes[i].cz + transform_lidar.location.z])
-        rotation_world = bboxes[i].orient + np.radians(transform_lidar.rotation.yaw)
-        dist = math.sqrt(location_world[0]**2 + location_world[1]**2)
+        location_world = np.array([truncate((bboxes[i].cx + transform_lidar.location.x),8), truncate((bboxes[i].cy + transform_lidar.location.y),8), truncate((bboxes[i].cz + transform_lidar.location.z),8)])
+        rotation_world = truncate((bboxes[i].orient + np.radians(transform_lidar.rotation.yaw)),8)
+        '''
+		dist = math.sqrt(location_world[0]**2 + location_world[1]**2)
         if dist>=0:
             world_frame = np.array([-transform_lidar.location.x,-transform_lidar.location.y,-transform_lidar.location.z])
             trans_rot = np.zeros((4, 4))
@@ -416,7 +431,7 @@ def transform_world(bboxes, vehicle_lidar):
             trans_rot[1,:] = np.array([-math.sin(angle_lidar), math.cos(angle_lidar), 0.0, np.dot(-world_frame, np.array([-math.sin(angle_lidar), math.cos(angle_lidar), 0.0]))]) 
             trans_rot[2,:] = np.array([0.0, 0.0, 1.0, np.dot(-world_frame,np.array([0.0, 0.0, 1.0]))])
             trans_rot[3,:] = np.array([0.0,0.0,0.0,1.0])
-            translation = np.dot(trans_rot, np.array([bboxes[i].cx,bboxes[i].cy,bboxes[i].cz,1.0]))
+            translation = np.dot(trans_rot, np.array([-bboxes[i].cx,bboxes[i].cy, bboxes[i].cz, 1.0]))
         else:
             translation = [0,0,0]
         """
@@ -425,20 +440,22 @@ def transform_world(bboxes, vehicle_lidar):
         reflect_to_x = np.array([[1,0,0],[0,-1,0],[0,0,1]])
         reflect_to_y = np.array([[-1,0,0],[0,1,0],[0,0,1]])
         identity = np.array([[1,0,0],[0,1,0],[0,0,1]])
-        adapt = np.array([[0,1,0],[1,0,0],[0,0,-1]])
+        adapt = np.array([[1,0,0],[0,1,0],[0,0,1]])
+        #translation_ref = np.dot(reflect_to_y, translation[:3])
         translation_ref = np.dot(adapt, translation[:3])
+        '''
         bbox_param = struct_bbox()
-        bbox_param.cx 		= translation_ref[0]
-        bbox_param.cy 		= translation_ref[1]
-        bbox_param.cz 		= translation_ref[2]
+        bbox_param.cx 		= location_world[0] #translation_ref[0] #
+        bbox_param.cy 		= location_world[1] #translation_ref[1] #
+        bbox_param.cz 		= location_world[2] #translation_ref[2] #
         bbox_param.dist 	= bboxes[i].dist #math.sqrt(bbox_param.cx**2 + bbox_param.cy**2 + bbox_param.cz**2)
-        bbox_param.l 		= bboxes[i].l
-        bbox_param.w 		= bboxes[i].w
-        bbox_param.h 		= bboxes[i].h
-        bbox_param.orient 	= rotation_world
-        bbox_param.speed 	= math.sqrt(
+        bbox_param.l 		= truncate(bboxes[i].l,8)
+        bbox_param.w 		= truncate(bboxes[i].w,8)
+        bbox_param.h 		= truncate(bboxes[i].h,8)
+        bbox_param.orient 	= truncate(rotation_world,8)
+        bbox_param.speed 	= truncate((math.sqrt(
 			(bboxes[i].speed * math.cos(bboxes[i].orient) + velocity_lidar.x * math.cos(np.radians(transform_lidar.rotation.yaw)))**2 
-			+ (bboxes[i].speed * math.sin(bboxes[i].orient) + velocity_lidar.y * math.sin(np.radians(transform_lidar.rotation.yaw)))**2) #math.sqrt(( bbox_param.cx - bbox_old.cx)**2 + (bbox_param.cy - bbox_old.cy)**2 + (bbox_param.cz - bbox_old.cz)**2 )/ (process_time.total_seconds())
+			+ (bboxes[i].speed * math.sin(bboxes[i].orient) + velocity_lidar.y * math.sin(np.radians(transform_lidar.rotation.yaw)))**2)),9) #math.sqrt(( bbox_param.cx - bbox_old.cx)**2 + (bbox_param.cy - bbox_old.cy)**2 + (bbox_param.cz - bbox_old.cz)**2 )/ (process_time.total_seconds())
         bboxes_world.append(bbox_param)
         i = i+1
 
