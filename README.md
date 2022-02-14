@@ -45,7 +45,7 @@ while (id < len(bboxes)):
         vehicle_speed   = bboxes_world[id].speed
         id = id+1
 ```
-6. Possible bugs:
+6. Possible bugs: **(IMPORTANT!)**
   * White jittering in camera window
   * Push algorithm change arbitrarily from push from top to push from bottom. Desired: push from bottom
   * Vehicle ID changed when new vehicle detected
