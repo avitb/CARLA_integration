@@ -47,8 +47,9 @@ while (id < len(bboxes)):
 ```
 6. Possible bugs:
   * White jittering in camera window
-  * Pop/push algorithm change arbitrarily from FIFO to LIFO
-  * World origin frame has incorrect speed parameter value (**resolved**)
+  * Push algorithm change arbitrarily from push from top to push from bottom. Desired: push from bottom
+  * Vehicle ID changed when new vehicle detected
+
 7. Video demo (print World-origin frame bboxes):
 
 Demo<video src='https://user-images.githubusercontent.com/49227721/143976548-89aa0aab-63f9-47a7-a8e3-311a1052ca13.mp4' width=1920/>
