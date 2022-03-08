@@ -50,7 +50,7 @@ while (id < len(bboxes)):
   * Push algorithm change arbitrarily from push from top to push from bottom. Desired: push from bottom
   * Vehicle ID changed when new vehicle detected (proposed to be solved using custom object tracking)
   * Planned Object Tracking flowchart:
-![Flowchart](https://user-images.githubusercontent.com/49227721/157182803-17b74f81-fa95-42d5-845c-261776d04877.png)
+![Flowchart](https://user-images.githubusercontent.com/49227721/157183124-9636145d-e645-42d3-8a98-fec93466ab9a.png)
 
 
 7. Video demo (print World-origin frame bboxes):
