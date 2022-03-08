@@ -48,7 +48,10 @@ while (id < len(bboxes)):
 6. Possible bugs: **(IMPORTANT!)**
   * White jittering in camera window
   * Push algorithm change arbitrarily from push from top to push from bottom. Desired: push from bottom
-  * Vehicle ID changed when new vehicle detected
+  * Vehicle ID changed when new vehicle detected (proposed to be solved using custom object tracking)
+  * Planned Object Tracking flowchart:
+![Flowchart](https://user-images.githubusercontent.com/49227721/157182803-17b74f81-fa95-42d5-845c-261776d04877.png)
+
 
 7. Video demo (print World-origin frame bboxes):
 
