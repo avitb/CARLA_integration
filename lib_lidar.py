@@ -55,17 +55,16 @@ IM_WIDTH = 640
 IM_HEIGHT = 480
 i_image = 0
 
-class struct_bbox():
-    def __init__(self):
-        self.cx=0.0
-        self.cy=0.0
-        self.cz=0.0
-        self.dist=0.0
-        self.l=0.0
-        self.w=0.0
-        self.h=0.0
-        self.orient=0.0
-        self.speed=0.0
+class struct_bbox:
+    cx		: float
+    cy		: float
+    cz		: float
+    dist	: float
+    l		: float
+    w		: float
+    h		: float
+    orient	: float
+    speed	: float
 
 #global i_image
 
@@ -187,6 +186,9 @@ def get_bounding_boxes(vehicle, vehicle_lidar):
     Returns 3D bounding box for a vehicle as set of points.
     """
     cords = np.zeros((3, 8))
+    """
+	3D Object Detection
+	"""
     extent = vehicle.bounding_box.extent
     transform = vehicle.get_transform()
     transform_lidar = vehicle_lidar.get_transform()
@@ -261,6 +263,8 @@ def get_bbox_json(vehicle, vehicle_lidar, bbox_old, process_time):
     extent = vehicle.bounding_box.extent
     transform = vehicle.get_transform()
     transform_lidar = vehicle_lidar.get_transform()
+    velocity = vehicle.get_velocity()
+    velocity_lidar = vehicle_lidar.get_velocity()
     location = np.array(
 	                    [transform.location.x - transform_lidar.location.x,
 	                    transform.location.y - transform_lidar.location.y,
@@ -296,7 +300,8 @@ def get_bbox_json(vehicle, vehicle_lidar, bbox_old, process_time):
     bbox_param.h 		= extent.z*2
     bbox_param.orient 	= rotation
     
-    bbox_param.speed 	= math.sqrt(( bbox_param.cx - bbox_old.cx)**2 + (bbox_param.cy - bbox_old.cy)**2 + (bbox_param.cz - bbox_old.cz)**2 )/ (process_time.total_seconds())
+    #bbox_param.speed 	= math.sqrt(( bbox_param.cx - bbox_old.cx)**2 + (bbox_param.cy - bbox_old.cy)**2 + (bbox_param.cz - bbox_old.cz)**2 )/ (process_time.total_seconds())
+    bbox_param.speed 	= math.sqrt((velocity.x - velocity_lidar.x)**2 + (velocity.y - velocity_lidar.y)**2)
 
     #json_string = np.array([cx,cy,cz,dist,l,w,h,orient,speed])
     #return json_string
@@ -328,7 +333,7 @@ def get_bboxes(world, vehicle_lidar, bboxes_old, process_time):
                 bbox_old.cz = 0.0
 
             bbox = get_bbox_json(vehicle, vehicle_lidar, bbox_old, process_time)
-            if((bbox.cx <= 0.0)):#and(bbox.cx != 0)and(bbox.cy != 0)and(bbox.cz != 0)): #only return bbox in front of ego vehicle
+            if((bbox.cx <= 0.0)or(bbox.cx > 0)):#and(bbox.cx != 0)and(bbox.cy != 0)and(bbox.cz != 0)): #only return bbox in front of ego vehicle
                 bboxes.append(bbox)
                 """
                 bboxes[i] = {}
@@ -420,8 +425,17 @@ def transform_world(bboxes, vehicle_lidar):
     bboxes_world = []
     i = 0
     while (i<len(bboxes)):
-        location_world = np.array([truncate((bboxes[i].cx + transform_lidar.location.x),8), truncate((bboxes[i].cy + transform_lidar.location.y),8), truncate((bboxes[i].cz + transform_lidar.location.z),8)])
+        #location_world = np.array([truncate((bboxes[i].cx + transform_lidar.location.x),8), truncate((bboxes[i].cy + transform_lidar.location.y),8), truncate((bboxes[i].cz + transform_lidar.location.z),8)])
+        #location_world = np.array([truncate((transform.location.x),8), truncate((transform.location.y),8), truncate((bboxes[i].cz + transform_lidar.location.z),8)])
         rotation_world = truncate((bboxes[i].orient + np.radians(transform_lidar.rotation.yaw)),8)
+        if (bboxes[i].dist>=0):
+            trans_rot = np.zeros((2, 2))
+            trans_rot[0,:] = np.array([math.cos(angle_lidar), math.sin(angle_lidar)])
+            trans_rot[1,:] = np.array([-math.sin(angle_lidar), math.cos(angle_lidar)])
+            transformation = np.dot(trans_rot, np.array([-bboxes[i].cx,bboxes[i].cy]))
+        else:
+            transformation = [0,0,0]
+        location_world = np.array([truncate((transformation[0] + transform_lidar.location.x),8), truncate((transformation[1] + transform_lidar.location.y),8), truncate((bboxes[i].cz + transform_lidar.location.z),8)])
         '''
 		dist = math.sqrt(location_world[0]**2 + location_world[1]**2)
         if dist>=0:
@@ -454,12 +468,39 @@ def transform_world(bboxes, vehicle_lidar):
         bbox_param.h 		= truncate(bboxes[i].h,8)
         bbox_param.orient 	= truncate(rotation_world,8)
         bbox_param.speed 	= truncate((math.sqrt(
-			(bboxes[i].speed * math.cos(bboxes[i].orient) + velocity_lidar.x * math.cos(np.radians(transform_lidar.rotation.yaw)))**2 
-			+ (bboxes[i].speed * math.sin(bboxes[i].orient) + velocity_lidar.y * math.sin(np.radians(transform_lidar.rotation.yaw)))**2)),9) #math.sqrt(( bbox_param.cx - bbox_old.cx)**2 + (bbox_param.cy - bbox_old.cy)**2 + (bbox_param.cz - bbox_old.cz)**2 )/ (process_time.total_seconds())
+			(bboxes[i].speed * math.cos(rotation_world) - velocity_lidar.x)**2 
+			+ (bboxes[i].speed * math.sin(rotation_world) - velocity_lidar.y)**2)),8) #math.sqrt(( bbox_param.cx - bbox_old.cx)**2 + (bbox_param.cy - bbox_old.cy)**2 + (bbox_param.cz - bbox_old.cz)**2 )/ (process_time.total_seconds())
         bboxes_world.append(bbox_param)
         i = i+1
 
     return bboxes_world
+	
+def print_vehicle(world, vehicle_lidar):
+    vehicles = world.get_actors().filter('vehicle.*')
+    id = 0
+    print("DARI PYTHON API\n{")
+    for vehicle in vehicles:
+        distance = dist(vehicle, vehicle_lidar)
+        if((distance<60)):
+            transform = vehicle.get_transform()
+            velocity = vehicle.get_velocity()
+            print("'id' = " + str(id))
+            print("'dist' = " + str(distance))
+            print("    {\t'cx' = " + str(transform.location.x))
+            print("\t'cy' = " + str(transform.location.y))
+            print("\t'cz' = " + str(transform.location.z))
+            #print("\t'dist' = " + str(bboxes[id].dist))
+            #print("\t'l' = " + str(bboxes[id].l))
+            #print("\t'w' = " + str(bboxes[id].w))
+            #print("\t'h' = " + str(bboxes[id].h))
+            print("\t'orient' = " + str(np.radians(transform.rotation.yaw)))
+            #if(velocity.x != 0):
+                #print("\t'speed orient' = " + str(math.atan(-velocity.y/velocity.x)))
+            print("\t'speed' = " + str(math.sqrt(velocity.x**2 + velocity.y**2)) + "\t}")
+            id = id+1
+    print("}")
+
+            
 	
 def main_code(arg): #, world, vehicle_lidar):
     """Main function of the script"""
